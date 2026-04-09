@@ -1,0 +1,3 @@
+#!/bin/bash
+/bin/umount /mnt/m
+/bin/mount -t drvfs M: /mnt/m
