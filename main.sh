@@ -60,7 +60,7 @@ done
 
 #clear working dir
 target_dir="${seriesbase}/${showname}/Season ${seasonnum}/"
-target_subs_dir="${target_dir}/subtitles/"
+target_subs_dir="${target_dir}subtitles/"
 
 echo "Starting to move mp4s" | tee -a "$LOGFILE"
 cd "$workdir_video"
@@ -77,6 +77,6 @@ for i in ${workdir_video}/*.mkv ; do
    outname=$(echo "$i" | sed 's_'${workdir_video}'/__' )
    rm "./${outname}"  
 done;
-
+cd "${scripts_base}"
 ${scripts_base}/myeject.sh ${drive}:
 
