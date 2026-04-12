@@ -25,8 +25,6 @@ Bash:
 ```
 If you want to provide some info about the disc you are ripping, create a text file called `manualinfo.txt` in the script directory. Details in the settings file for that.
 
-At the moment the script expects the optical drive with the dvd disc to be a drive M: / /mnt/m
-Further development will address this to be able to be any drive letter.
 
 ## Author
 Jouni Lappalainen (2026)
