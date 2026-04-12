@@ -38,16 +38,16 @@ while true; do
   wait_for_disc_or_quit
 
    echo "Starting the rip..."
-   drive=""
+   #drive=""
    sudo "$mountdvd"
-   drive="m"
+   #drive="m"
 
    #Create the working dirs if not existing
    mkdir -p "$workdir_video"
    mkdir -p "$workdir_subs"
 
 
-   "$vlc_executable" dvdsimple:///M: --run-time=1 --play-and-exit --no-audio --intf dummy --no-video
+   "$vlc_executable" dvdsimple:///${drive_win} --run-time=1 --play-and-exit --no-audio --intf dummy --no-video
    echo "Snooping discs for naming stuff" | tee -a "$LOGFILE"
    ${scripts_base}/getNames.sh
 

@@ -15,7 +15,7 @@ if [[ -f "$manualinfofile" ]]; then
       seasonnum=$(cat "$manualinfofile" | head -2 | tail -1)
       next_epnum=$(cat "$manualinfofile" | tail -1 )
 else
-   "$vlc_executable" dvdsimple:///M: --run-time=2 --play-and-exit --no-audio --intf dummy --no-video
+   "$vlc_executable" dvdsimple:///${drive_win} --run-time=2 --play-and-exit --no-audio --intf dummy --no-video
 
    makemkvcon --robot --decrypt info  file:"$mountpoint" > "$discinfofile"
 

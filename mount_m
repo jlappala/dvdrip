@@ -1,3 +1,5 @@
 #!/bin/bash
+. ./settings.conf
+
 /bin/umount /mnt/m
-/bin/mount -t drvfs M: /mnt/m
+/bin/mount -t drvfs ${drive_win} /mnt/${drive}
