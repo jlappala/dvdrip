@@ -67,7 +67,7 @@ else
 fi
 max_epnum=0
 
-for i in ${seriesbase}/${showname}/Season\ ${seasonnum}/*; do
+for i in "${seriesbase}/${showname}"/Season\ ${seasonnum}/*; do
   curepnum=$( echo "$i" | grep -o -e 'S[[:digit:]]*E[[:digit:]]*' | sed 's/S[[:digit:]]E[0]*//')
   if [[ -n "$curepnum" && "$curepnum" -gt "$max_epnum" ]]; then
      max_epnum="$curepnum"

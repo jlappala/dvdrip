@@ -33,10 +33,13 @@ wait_for_disc_or_quit() {
 # done
 # prev="False"
 
+skipfirsttitle="${1:-no}"
+
+
 
 while true; do
   wait_for_disc_or_quit
-
+   first=1 
    echo "Starting the rip..."
    #drive=""
    sudo "$mountdvd"
@@ -64,7 +67,14 @@ while true; do
 
 
    for i in ${workdir_video}/* ; do
-      #echo "Next ep: ${next_epnum}"
+      if [ "$skipfirsttitle" = "yes" ] && [ $first -eq 1 ]; then
+        first=0
+        echo "Skipping first title due to user argument."
+        continue
+      fi
+
+      first=0
+      echo "Next ep: ${next_epnum}"
       echo "Processing file: ${i}" | tee -a "$LOGFILE"
       echo "Extracting subtitle streams" | tee -a "$LOGFILE"
       ffmpeg -i "$i" -map 0:s:m:language:eng? -map 0:s:m:language:fin? -c copy "${workdir_video}/subs${count}.mkv" >> "$LOGFILE" 2>&1
@@ -74,15 +84,21 @@ while true; do
       echo
       echo "Converting subtitles to .srt" | tee -a "$LOGFILE"
       echo
-      cmd="SubtitleEdit.exe /convert ${workdir_video_win}\\subs${count}.mkv srt /ocrengine:tesseract /outputfilename:${workdir_subs_win}\\${outname}.srt && exit" 
-
+      tempOutName=temp
+      #cmd="SubtitleEdit.exe /convert \"${workdir_video_win}\\subs${count}.mkv\" srt /ocrengine:tesseract /outputfilename=\"${workdir_subs_win}\\${outname}.srt\" && exit" 
+      cmd="SubtitleEdit.exe /convert ${workdir_video_win}\\subs${count}.mkv srt /ocrengine:tesseract /outputfilename:${workdir_subs_win}\\${tempOutName}${count}.srt && exit" 
+      
+      echo $cmd
       pushd "$workdir_video" > /dev/null
       $command_prompt /c "$cmd"
       popd > /dev/null
       #read cont
       echo "Renaming subtitle file ${outname}.srt" | tee -a "$LOGFILE"
       cd "$workdir_subs"
-      rename 's/_S/ S/' ${outname}*.srt
+      mv "$workdir_subs/${tempOutName}${count}.srt" "$workdir_subs/${outname}.srt"
+      #read cont
+      rename 's/_S/ S/' *.srt
+      #read cont
       echo "Converting ${i} to ${outname}.mp4" | tee -a "$LOGFILE"
       cd "$workdir_video"
       HandBrakeCLI --preset-import-file "$handbr_presets_file" --preset "$handbr_preset" --input "$i" --output "${workdir_video}/${outname}.mp4" --audio-lang-list "$langlist"  --all-audio  --subtitle-lang-list "$langlist" --all-subtitles --markers 2>&1| tee -a "$LOGFILE" | tr '\r' '\n' | stdbuf -oL grep -oE "^.* %.*ETA [0-9hms]+" | sed -E 's/(^.*)%.*ETA ([0-9hms]+).*/\1 % | ETA \2/' | while read -r line; do
