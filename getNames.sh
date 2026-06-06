@@ -66,13 +66,17 @@ else
 
 fi
 max_epnum=0
-
-for i in "${seriesbase}/${showname}"/Season\ ${seasonnum}/*; do
-  curepnum=$( echo "$i" | grep -o -e 'S[[:digit:]]*E[[:digit:]]*' | sed 's/S[[:digit:]]E[0]*//')
-  if [[ -n "$curepnum" && "$curepnum" -gt "$max_epnum" ]]; then
-     max_epnum="$curepnum"
-  fi
-done
+seasondir="${seriesbase}/${showname}/Season ${seasonnum}"
+#echo "$seasondir"
+if [[ -d "$seasondir" ]]; then
+   for i in "${seasondir}"/*; do
+      #echo "$i"
+     curepnum=$( echo "$i" | grep -o -e 'S[[:digit:]]*E[[:digit:]]*' | sed 's/S[[:digit:]]E[0]*//')
+     if [[ -n "$curepnum" && "$curepnum" -gt "$max_epnum" ]]; then
+        max_epnum="$curepnum"
+     fi
+   done
+fi
 
 next_epnum=$((max_epnum + 1))
 echo

@@ -6,8 +6,30 @@ get_media_loaded() {
   "$powershell" -Command "(Get-CimInstance Win32_CDROMDrive | Where-Object {\$_.Drive -eq 'M:'}).MediaLoaded" 2>/dev/null | tr -d '\r'
 }
 
+increment_manualinfo_season() {
+
+    if [[ ! -f "$manualinfofile" ]]; then
+        echo "manualinfo.txt not found"
+        return
+    fi
+
+    showname=$(sed -n '1p' "$manualinfofile")
+    seasonnum=$(sed -n '2p' "$manualinfofile")
+    next_epnum=$(sed -n '3p' "$manualinfofile")
+
+    seasonnum=$((seasonnum + 1))
+
+    {
+        echo "$showname"
+        echo "$seasonnum"
+        echo "$next_epnum"
+    } > "$manualinfofile"
+
+    echo "Season advanced to $seasonnum"
+}
+
 wait_for_disc_or_quit() {
-  echo "Insert disc to continue (press Q to quit)"
+  echo "Insert disc to continue (press Q to quit, or S to advance the season count)"
 
   while true; do
     # non-blocking read (0.5s timeout)
@@ -16,6 +38,10 @@ wait_for_disc_or_quit() {
     if [[ "$key" == "q" || "$key" == "Q" ]]; then
       echo "Exiting... Thanks!"
       exit 0
+    fi
+
+    if [[ "$key" == "s" || "$key" == "S" ]]; then
+      increment_manualinfo_season
     fi
 
     if [ "$(get_media_loaded)" = "True" ]; then
@@ -39,6 +65,7 @@ skipfirsttitle="${1:-no}"
 
 while true; do
   wait_for_disc_or_quit
+  disc_start_time=$(date +%s)
    first=1 
    echo "Starting the rip..."
    #drive=""
@@ -67,6 +94,7 @@ while true; do
 
 
    for i in ${workdir_video}/* ; do
+      title_start_time=$(date +%s)
       if [ "$skipfirsttitle" = "yes" ] && [ $first -eq 1 ]; then
         first=0
         echo "Skipping first title due to user argument."
@@ -74,7 +102,7 @@ while true; do
       fi
 
       first=0
-      echo "Next ep: ${next_epnum}"
+      #echo "Next ep: ${next_epnum}"
       echo "Processing file: ${i}" | tee -a "$LOGFILE"
       echo "Extracting subtitle streams" | tee -a "$LOGFILE"
       ffmpeg -i "$i" -map 0:s:m:language:eng? -map 0:s:m:language:fin? -c copy "${workdir_video}/subs${count}.mkv" >> "$LOGFILE" 2>&1
@@ -88,7 +116,7 @@ while true; do
       #cmd="SubtitleEdit.exe /convert \"${workdir_video_win}\\subs${count}.mkv\" srt /ocrengine:tesseract /outputfilename=\"${workdir_subs_win}\\${outname}.srt\" && exit" 
       cmd="SubtitleEdit.exe /convert ${workdir_video_win}\\subs${count}.mkv srt /ocrengine:tesseract /outputfilename:${workdir_subs_win}\\${tempOutName}${count}.srt && exit" 
       
-      echo $cmd
+      #echo $cmd
       pushd "$workdir_video" > /dev/null
       $command_prompt /c "$cmd"
       popd > /dev/null
@@ -108,6 +136,12 @@ while true; do
       rename 's/_S/ S/' "${outname}.mp4"
       let count=$((count+1));
       let next_epnum=$((next_epnum+1));
+      title_end_time=$(date +%s)
+      title_duration=$((title_end_time - title_start_time))
+      title_duration_min=$(((title_duration % 3600) / 60))
+      title_duration_hr=$((title_duration / 3600))
+      title_duration_sec=$((title_duration % 60))
+      echo "Title took ${title_duration_hr}h ${title_duration_min}m ${title_duration_sec}s to process."
    done
 
    #clear working dir
@@ -142,5 +176,11 @@ while true; do
    done;
    cd "${scripts_base}"
    ${scripts_base}/myeject.sh ${drive}:
+   disc_end_time=$(date +%s)
+   disc_duration=$((disc_end_time - disc_start_time))
+   hr=$((disc_duration / 3600))
+   min=$(((disc_duration % 3600) / 60))
+   sec=$((disc_duration % 60))
+   echo "The whole disc took ${hr}h ${min}m ${sec}s to process"
 
 done
